@@ -58,6 +58,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px
 .sb-section{position:relative}
 .sb-new-session{flex-shrink:0;padding:8px 12px;margin:0 0 8px;border-radius:10px;cursor:pointer;font-size:12px;color:var(--primary);font-weight:500;text-align:center;border:1px dashed var(--border);transition:.15s}
 .sb-new-session:hover{background:#EFF6FF;border-color:var(--primary)}
+.sb-new-pin{position:sticky;top:0;z-index:6;background:var(--sidebar);padding-top:4px;padding-bottom:8px;margin:4px 0 8px}
 .sb-hist-empty{font-size:11.5px;color:#94A3B8;padding:8px 12px;line-height:1.6}
 .sb-user{display:flex;align-items:center;gap:8px;padding:10px 6px 4px;border-top:1px solid var(--border);margin-top:8px}
 .sb-user .av{width:30px;height:30px;border-radius:50%;background:#B0BE37;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -110,6 +111,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px
 .hero-chip:hover{background:#EFF6FF;border-color:var(--primary);color:var(--primary)}
 .hero-chip-skill{background:#EFF6FF;border-color:#BFDBFE;color:var(--primary);font-weight:500}
 .hero-chip-skill:hover{background:#DBEAFE}
+.hero-skill-changed{animation:heroSkillChanged .5s ease}
+@keyframes heroSkillChanged{
+  0%{transform:scale(1);background:#EFF6FF}
+  50%{transform:scale(1.08);background:#BFDBFE;box-shadow:0 0 0 6px rgba(37,99,235,.15)}
+  100%{transform:scale(1);background:#EFF6FF}
+}
 .hero-chip-dot{width:6px;height:6px;border-radius:50%;background:var(--primary)}
 .hero-chip-caret{font-size:9px;color:var(--muted-fg);margin-left:2px}
 .hero-chip-icon{font-size:12px}
@@ -127,7 +134,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px
 .hero-ex-label{font-size:11px;color:var(--muted-fg);flex-shrink:0}
 .hero-ex-chip{padding:5px 12px;background:var(--surface-1);border:1px solid var(--border-2);border-radius:16px;font-size:11px;color:var(--fg-2);cursor:pointer;transition:.15s;white-space:nowrap}
 .hero-ex-chip:hover{background:#EFF6FF;border-color:var(--primary);color:var(--primary)}
-.hero-kb-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-2)}
+.hero-kb-section{margin-top:14px;padding:14px;background:var(--surface-1);border:1px solid var(--border);border-radius:12px}
 .hero-kb-head{font-size:11px;font-weight:600;color:var(--muted-fg);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .hero-kb-head::before{content:'';display:inline-block;width:14px;height:14px;background:linear-gradient(135deg,#BFDBFE,#93C5FD);border-radius:3px}
 .hero-kb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
@@ -656,9 +663,9 @@ pre.flow{display:block}
 
   <div class="sb-section sb-flex">
     <div class="sb-section-t">我的需求单</div>
+    <div class="sb-new-session sb-new-pin" onclick="newSession()">+ 新建需求单</div>
     <div class="sb-hist" id="sbHist"></div>
   </div>
-  <div class="sb-new-session" onclick="newSession()">+ 新建需求单</div>
 
   <div class="sb-spacer"></div>
   <div class="sb-footer">QQ音乐 · copilot</div>
@@ -1089,11 +1096,18 @@ function openSkillDropdown(ev){
 }
 function closeSkillDropdown(){const d=document.getElementById('heroSkillDropdown');if(d)d.classList.remove('show');}
 function selectHeroSkill(id){
-  // 委托给 switchSkill 统一处理（切换 on 状态 + 重载访谈步骤 + 持久化）
+  // 立即更新 hero 芯片（视觉反馈先于一切）
+  const sn=document.getElementById('heroSkillName');
+  if(sn){
+    const newName=(SKILL_MD_STORE[id]&&(SKILL_MD_STORE[id].label||SKILL_MD_STORE[id].name))||id;
+    sn.textContent=newName;
+    sn.classList.add('hero-skill-changed');
+    setTimeout(()=>sn.classList.remove('hero-skill-changed'),500);
+  }
   switchSkill(id);
-  closeSkillDropdown();
-  // 更新 hero 芯片名称
-  const sn=document.getElementById('heroSkillName');if(sn){const sk=getActiveSkill();sn.textContent=sk?(sk.label||sk.name||sk.id):id;}
+  openSkillDropdown();
+  setTimeout(closeSkillDropdown,400);
+  toast('已切换到 '+(SKILL_MD_STORE[id]?(SKILL_MD_STORE[id].label||id):id));
 }
 function openKbQuick(){toast('请在下方"业务知识库"卡片管理，或在对话中上传');goStage(0);setTimeout(()=>{const z=document.getElementById('uploadZone');if(z)z.scrollIntoView({behavior:'smooth',block:'center'});},200);}
 function openUploadForChat(){const f=document.getElementById('fileInput');if(f)f.click();}
