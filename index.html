@@ -32,6 +32,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px
 .sb-logo-mark{width:30px;height:30px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
 .sb-logo b{color:var(--sidebar-ink);font-size:15px;font-weight:600;letter-spacing:-.01em}
 .sb-section{margin-top:4px}
+.sb-section.sb-flex{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.sb-section.sb-flex .sb-hist{flex:1;overflow-y:auto;min-height:0}
 .sb-section-t{font-size:10.5px;color:#94A3B8;letter-spacing:.4px;padding:6px 12px 4px;font-weight:500}
 .sb-divider{height:1px;background:var(--border);margin:10px 12px}
 .sb-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;color:var(--fg-2);font-size:13px;cursor:pointer;transition:.12s;margin-bottom:2px;font-weight:500;background:transparent;border:1px solid transparent}
@@ -94,6 +96,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px
 .hero-chat{margin-bottom:20px;padding:32px 36px;background:linear-gradient(180deg,var(--surface-1) 0%,var(--card) 100%);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
 .hero-title{font-size:24px;font-weight:600;color:var(--fg);text-align:center;margin-bottom:6px;letter-spacing:.5px}
 .hero-sub{font-size:13px;color:var(--muted-fg);text-align:center;margin-bottom:20px}
+.hero-loaded{font-size:11.5px;color:#059669;text-align:center;margin:0 auto 14px;padding:5px 12px;background:#ECFDF5;border-radius:20px;width:fit-content;display:block}
 .mode-tabs{display:flex;justify-content:center;gap:0;background:var(--surface-1);border:1px solid var(--border);border-radius:24px;padding:4px;width:fit-content;margin:0 auto 16px}
 .mode-tab{padding:8px 20px;font-size:13px;font-weight:500;color:var(--muted-fg);border-radius:18px;cursor:pointer;transition:.18s;display:flex;align-items:center;gap:6px}
 .mode-tab:hover{color:var(--fg-2)}
@@ -634,7 +637,7 @@ pre.flow{display:block}
 
   <div class="sb-divider"></div>
 
-  <div class="sb-section">
+  <div class="sb-section sb-flex">
     <div class="sb-section-t">我的需求单</div>
     <div class="sb-hist" id="sbHist"></div>
   </div>
@@ -667,6 +670,7 @@ pre.flow{display:block}
       <div class="hero-chat">
         <div class="hero-title">  Copilot · 帮你快速撰写结构化PRD</div>
         <div class="hero-sub">一边对话一边澄清产品需求，帮你撰写结构化PRD的小工具</div>
+        <div class="hero-loaded" id="heroLoaded">  默认已加载 Bubble 业务知识库、3 款需求风格 + 1 个 Skill</div>
         <div class="mode-tabs" id="modeTabs">
           <div class="mode-tab on" data-mode="normal" onclick="switchHomeMode('normal')">  普通模式</div>
           <div class="mode-tab" data-mode="quick" onclick="switchHomeMode('quick')">  快速模式</div>
@@ -685,7 +689,7 @@ pre.flow{display:block}
                 <span>知识库</span>
                 <span id="heroKbCount" style="color:var(--muted-fg);font-size:10.5px">0</span>
               </div>
-              <div class="hero-chip" onclick="openUploadForChat()">
+              <div class="hero-chip hero-ex-quick-only" id="heroUploadChip" onclick="openUploadForChat()" style="display:none">
                 <span class="hero-chip-icon">  </span>
                 <span>上传文档</span>
               </div>
