@@ -1052,20 +1052,18 @@ function enterHeroMode(mode,text){
     setTimeout(()=>{
       const chip=document.getElementById('quickModeSwitch');
       if(chip&&!chip.classList.contains('on'))chip.click();
-      // 写入输入框
+      // 写入输入框（userSend/quickInfer 会自己 pushMe，不要重复）
       const ci=document.getElementById('chatInput');
       if(ci){ci.value=text;ci.style.height='90px';ci.focus();}
-      pushMe(text);
       quickInfer(text);
     },400);
   }else{
     quickMode=false;updateQuickModeSwitch();
     setTimeout(()=>{
       if(!interviewState)startInterview();
-      // 写第一个问题的回答
+      // 写第一个问题的回答（userSend 会自己 pushMe）
       const ci=document.getElementById('chatInput');
       if(ci)ci.value=text;
-      pushMe(text);
       userSend();
     },400);
   }
@@ -3459,7 +3457,7 @@ async function quickEditInfer(instruction){
     setTimeout(()=>{const inp=document.getElementById('chatInput');if(inp)inp.focus();},100);
   }catch(e){closeAILoading();toast('修改失败：'+e.message);}
 }
-function pushMe(t){const m=document.createElement('div');m.className='msg me';m.innerHTML=`<div class="av av-me">蟹</div><div class="bub">${esc(t)}</div>`;chatStream.appendChild(m);sc();}
+function pushMe(t){const m=document.createElement('div');m.className='msg me';m.innerHTML=`<div class="av av-me">用户</div><div class="bub">${esc(t)}</div>`;chatStream.appendChild(m);sc();}
 function sc(){chatStream.scrollTop=chatStream.scrollHeight;}
 const PUBLIC_CONTEXT_KEYS=['profile','bg','users','goals','features','edge','nonfunc','data','deps','interaction'];
 function canonicalInterviewContext(opts){
