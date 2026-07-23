@@ -1065,15 +1065,11 @@ function openSkillDropdown(ev){
 }
 function closeSkillDropdown(){const d=document.getElementById('heroSkillDropdown');if(d)d.classList.remove('show');}
 function selectHeroSkill(id){
-  const sk=SKILL_MD_STORE[id];
-  if(!sk){toast('Skill 不存在');return;}
-  activeSkillId=id;
-  localStorage.setItem('active_skill',id);
-  const name=sk.label||sk.name||id;
-  const sn=document.getElementById('heroSkillName');if(sn)sn.textContent=name;
-  renderSkills();
+  // 委托给 switchSkill 统一处理（切换 on 状态 + 重载访谈步骤 + 持久化）
+  switchSkill(id);
   closeSkillDropdown();
-  toast('已切换到 ' + name);
+  // 更新 hero 芯片名称
+  const sn=document.getElementById('heroSkillName');if(sn){const sk=getActiveSkill();sn.textContent=sk?(sk.label||sk.name||sk.id):id;}
 }
 function openKbQuick(){toast('请在下方"业务知识库"卡片管理，或在对话中上传');goStage(0);setTimeout(()=>{const z=document.getElementById('uploadZone');if(z)z.scrollIntoView({behavior:'smooth',block:'center'});},200);}
 function openUploadForChat(){const f=document.getElementById('fileInput');if(f)f.click();}
