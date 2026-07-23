@@ -127,6 +127,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px
 .hero-ex-label{font-size:11px;color:var(--muted-fg);flex-shrink:0}
 .hero-ex-chip{padding:5px 12px;background:var(--surface-1);border:1px solid var(--border-2);border-radius:16px;font-size:11px;color:var(--fg-2);cursor:pointer;transition:.15s;white-space:nowrap}
 .hero-ex-chip:hover{background:#EFF6FF;border-color:var(--primary);color:var(--primary)}
+.hero-kb-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-2)}
+.hero-kb-head{font-size:11px;font-weight:600;color:var(--muted-fg);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.hero-kb-head::before{content:'';display:inline-block;width:14px;height:14px;background:linear-gradient(135deg,#BFDBFE,#93C5FD);border-radius:3px}
+.hero-kb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.hero-kb-card{padding:10px 12px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;position:relative;display:flex;flex-direction:column;gap:4px;min-height:64px}
+.hero-kb-card.on{border-color:var(--primary);background:#EFF6FF}
+.hero-kb-card:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.1)}
+.hero-kb-card .hkb-name{font-size:12.5px;font-weight:600;color:var(--fg);line-height:1.3}
+.hero-kb-card .hkb-meta{font-size:10.5px;color:var(--muted-fg)}
+.hero-kb-card .hkb-tag{display:inline-block;padding:1px 6px;background:#ECFDF5;color:#059669;font-size:9.5px;border-radius:3px;width:fit-content;font-weight:500}
+.hero-kb-card .hkb-act{margin-top:auto;display:flex;gap:4px;align-items:center;padding-top:4px}
+.hero-kb-card .hkb-detail{font-size:10.5px;color:var(--primary);cursor:pointer;font-weight:500;flex:1}
+.hero-kb-card .hkb-detail:hover{text-decoration:underline}
+.hero-kb-card .hkb-check{color:var(--primary);font-size:14px;font-weight:600}
+.hero-kb-add{padding:10px 12px;border:1.5px dashed var(--border-2);border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted-fg);font-size:12px;transition:.15s;min-height:64px;flex-direction:column}
+.hero-kb-add:hover{border-color:var(--primary);color:var(--primary);background:#F0F9FF}
+.hero-kb-add .hkb-plus{font-size:18px;font-weight:300;line-height:1}
 
 /* Skill 下拉浮层 */
 .hero-skill-dropdown{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:100;display:none;align-items:flex-start;justify-content:center;backdrop-filter:blur(2px);padding-top:25vh}
@@ -670,7 +687,6 @@ pre.flow{display:block}
       <div class="hero-chat">
         <div class="hero-title">  Copilot · 帮你快速撰写结构化PRD</div>
         <div class="hero-sub">一边对话一边澄清产品需求，帮你撰写结构化PRD的小工具</div>
-        <div class="hero-loaded" id="heroLoaded">  默认已加载 Bubble 业务知识库、3 款需求风格 + 1 个 Skill</div>
         <div class="mode-tabs" id="modeTabs">
           <div class="mode-tab on" data-mode="normal" onclick="switchHomeMode('normal')">  普通模式</div>
           <div class="mode-tab" data-mode="quick" onclick="switchHomeMode('quick')">  快速模式</div>
@@ -705,6 +721,10 @@ pre.flow{display:block}
           <span class="hero-ex-chip" onclick="quickExample('为 Bubble 粉丝社区新增一个动态成就勋章展示页，粉丝可以查看和分享自己获得的勋章')"> 写一个需求</span>
           <span class="hero-ex-chip" onclick="quickExample('为 QQ音乐直播间增加礼物打榜功能，用户可以给主播送礼并查看打榜排行')"> 写一个活动</span>
           <span class="hero-ex-chip hero-ex-quick-only" id="heroUploadChip" onclick="openUploadForChat()" style="display:none">  上传文档生成</span>
+        </div>
+        <div class="hero-kb-section">
+          <div class="hero-kb-head">知识库</div>
+          <div class="hero-kb-grid" id="heroKbGrid"></div>
         </div>
         <div class="hero-tip" id="heroTip">  快速模式：上传文档+一句话描述，AI一次性扩写</div>
       </div>
@@ -1085,6 +1105,62 @@ function syncHeroSkillName(){
   // 同步知识库计数
   const kc=document.getElementById('heroKbCount');
   if(kc)kc.textContent=(activeDocs||[]).length;
+  // 同步 hero KB 卡片
+  renderHeroKb();
+}
+// 渲染首页知识库卡片：内置 + 用户上传
+function renderHeroKb(){
+  const grid=document.getElementById('heroKbGrid');
+  if(!grid)return;
+  // 内置 KB
+  const builtinCards=(BUILTIN_KB||[]).map((f,i)=>{
+    const isOn=kbTexts[i]&&kbTexts[i].selected!==false;
+    return `<div class="hero-kb-card ${isOn?'on':''}" data-kbi="${i}">
+      <div class="hkb-name">${esc(f.title||f.filename)}</div>
+      <div class="hkb-meta">  ${(f.content||'').length} 字 · 内置</div>
+      <div class="hkb-act">
+        <span class="hkb-detail" onclick="event.stopPropagation();previewBuiltinKB(${i})">查看详情</span>
+        ${isOn?'<span class="hkb-check">✓</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+  // 用户上传的 KB（builtin=false 的）
+  const userCards=kbTexts.filter(f=>!f.builtin).map(f=>{
+    const idx=kbTexts.indexOf(f);
+    return `<div class="hero-kb-card on" data-kbi="${idx}">
+      <div class="hkb-name">${esc(f.title||f.filename)}</div>
+      <div class="hkb-meta">  ${(f.content||'').length} 字 · 我的</div>
+      <div class="hkb-act">
+        <span class="hkb-detail" onclick="event.stopPropagation();previewUserKB(${idx})">查看详情</span>
+        <span class="hkb-check">✓</span>
+      </div>
+    </div>`;
+  }).join('');
+  // + 上传卡
+  const addCard=`<div class="hero-kb-add" onclick="openKbQuick()">
+    <span class="hkb-plus">+</span>
+    <span>上传知识库</span>
+  </div>`;
+  grid.innerHTML=builtinCards+userCards+addCard;
+}
+function previewBuiltinKB(i){
+  const f=BUILTIN_KB[i];if(!f)return;
+  showKBModal(f.title,f.content||'',true);
+}
+function previewUserKB(i){
+  const f=kbTexts[i];if(!f)return;
+  showKBModal(f.title||f.filename,f.content||'',false);
+}
+function showKBModal(title,content,isBuiltin){
+  const m=document.createElement('div');
+  m.className='ai-modal kb-preview-modal';
+  m.onclick=function(e){if(e.target===m)m.remove();};
+  m.innerHTML=`<div class="ai-body" style="width:680px;max-width:92vw">
+    <div class="ai-head"><h4>  知识库详情 · ${esc(title)}${isBuiltin?' · 内置':''}</h4><span onclick="this.closest('.ai-modal').remove()" style="cursor:pointer">×</span></div>
+    <div class="ai-content kb-preview-content" style="max-height:60vh;overflow-y:auto;white-space:pre-wrap;line-height:1.7;font-size:12.5px;color:var(--fg-2)">${esc(content)}</div>
+    <div class="ai-actions" style="gap:8px"><button class="btn-mini ghost" onclick="this.closest('.ai-modal').remove()">关闭</button></div>
+  </div>`;
+  document.body.appendChild(m);
 }
 
 function renderSkills(){
@@ -1564,7 +1640,12 @@ function goCfg(){
   document.querySelectorAll('.stage').forEach(s=>s.classList.remove('active'));
   const cfg=document.getElementById('stageCfg');if(cfg)cfg.classList.add('active');
   var tabbar=document.getElementById('tabbar');if(tabbar)tabbar.style.display='none';
-  var ab=document.querySelector('.actionbar');if(ab)ab.style.display='none';  document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
+  var ab=document.querySelector('.actionbar');if(ab)ab.style.display='none';
+  document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
+  // 重新渲染知识库/风格/技能列表，确保 stageCfg 切到时数据最新
+  try{renderKBList();}catch(e){console.warn('renderKBList err',e);}
+  try{renderStyles();}catch(e){console.warn('renderStyles err',e);}
+  try{renderSkills();}catch(e){console.warn('renderSkills err',e);}
   try{persistSession();}catch(e){}
 }
 function nextStage(){if(stage===3){persistSession();downloadMD();toast('\u5df2\u5bfc\u51fa PRD \u6587\u6863');return;}goStage(stage+1);}
